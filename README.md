@@ -18,7 +18,7 @@ Then open `Preferences -> Package Settings -> HtmlTidy -> Settings - User` (whic
 
 To set up a custom keybinding, you can insert the following line into your `Default.sublime-keymap`:
 
-`{ "keys": ["ctrl+alt+t"], "command": "php_tidy"}`
+`{ "keys": ["ctrl+alt+t"], "command": "html_tidy"}`
 
 ## Install
 
