@@ -1,0 +1,43 @@
+{
+	// Turn on beautification
+	// This option specifies if Tidy should indent block-level tags.
+	"htmltidy-indent": true,
+
+	// This option specifies the number of spaces Tidy uses to indent content, when indentation is enabled.
+	"htmltidy-indent-spaces": 4,
+
+	// This option specifies the right margin Tidy uses for line wrapping. 
+	// Tidy tries to wrap lines so that they do not exceed this length. 
+	// Set wrap to zero if you want to disable line wrapping.
+	"htmltidy-wrap": 100,
+
+	// This option specifies if Tidy should strip out surplus presentational tags and attributes 
+	// replacing them by style rules and structural markup as appropriate. 
+	// It works well on the HTML saved by Microsoft Office products.
+	"htmltidy-clean": false,
+
+	// This option specifies if Tidy should print only the contents of the body tag as an HTML fragment.
+	"htmltidy-show-body-only": false,
+
+	// This option specifies if Tidy should begin each attribute on a new line.
+	"htmltidy-indent-attributes": false,
+
+	// This option specifies if Tidy should line wrap attribute values, for easier editing. 
+	"htmltidy-wrap-attributes": false,
+
+	// This option specifies if Tidy should output a line break before each <BR> element.
+	"htmltidy-break-before-br": false,
+
+	// This option specifies if Tidy should generate pretty printed output, writing it as HTML.
+	"htmltidy-output-html": true,
+
+	// This option specifies if Tidy should generate pretty printed output, writing it as HTML.
+	"htmltidy-output-xhtml": false,
+
+	// This option specifies if Tidy should generate pretty printed output, writing it as HTML.
+	"htmltidy-output-xml": false,
+
+	// This option specifies if Tidy should generate pretty printed output, writing it as HTML.
+	"htmltidy-doctype": "strict"
+
+}
