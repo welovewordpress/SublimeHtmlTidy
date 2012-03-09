@@ -4,10 +4,12 @@
 ## About
 This is a Sublime Text 2 plugin allowing you to clean and tidy up your HTML code. 
 
-It uses the version of `tidy`, which comes bundled with PHP 5.
+It uses a version of `tidy`, which comes bundled with PHP 5.
+
+Dedicated to Jeffrey Way @envatowebdev
 
 ## Usage
-`ctrl + shift + P` and type `Tidy HTML`, or you can set up your own keybindings.
+`ctrl + shift + P` and type `Tidy HTML`, or you can set up your own keybinding as shown below.
 
 ## Customize
 You can customize a growing number of options in HtmlTidy.sublime-settings.
@@ -19,6 +21,10 @@ Then open `Preferences -> Package Settings -> HtmlTidy -> Settings - User` (whic
 To set up a custom keybinding, you can insert the following line into your `Default.sublime-keymap`:
 
 `{ "keys": ["ctrl+alt+t"], "command": "html_tidy"}`
+
+## Known Issues
+
+At this time, the plugin will only work on OS X and Linux since it depends on /usr/bin/php. This will be adapted for Windows shortly.
 
 ## Install
 
