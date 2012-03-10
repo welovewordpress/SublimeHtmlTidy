@@ -5,23 +5,14 @@
  *
  * See README for more information.
  *
+ * based on:
+ * http://www.php.net/manual/en/tidy.examples.basic.php
+ * https://github.com/scribu/wp-phptidy
+ * 
  */
 
 
 //////////////// DEFAULT CONFIGURATION ///////////////////
-
-// some overwrites to make this useful as a plugin
-/* moved to sublime settings file 
-$custom_options = array(
-	"indent" => true,
-	"indent-spaces" => 4, 
-	"wrap" => 100, 		
-	"clean" => false,
-	"show-body-only" => false,
-    'indent-attributes' => false,
-    'wrap-attributes' => false,
-    'break-before-br' => false,
-);  */
 
 // some, but not all options for tidy
 // found on http://www.php.net/manual/en/tidy.examples.basic.php
@@ -72,38 +63,40 @@ $default_options = array(
     'break-before-br' => true,
 );
 
-// this is the file we will tidy up - hardcoded for now
-$tmpfile = '/tmp/htmltidy-sublime-buffer.php';
-
-// merge default options with command line arguments
-$config = parseArguments($default_options);
-
 ///////////// END OF DEFAULT CONFIGURATION ////////////////
 
 error_reporting( E_ALL );
 
 if ( !version_compare( phpversion(), "5.0", ">=" ) ) {
-	echo "Error: tidy.php requires PHP 5 or newer.\n";
-	exit( 1 );
+    echo "Error: tidy.php requires PHP 5 or newer.\n";
+    exit( 1 );
 }
 
-//// main() ////
-
 $tidy = new Tidy();
+$tmpfile = '';
+
+// merge default options with command line arguments
+$config = parseArguments($default_options);
+
+// check if input file exists
+if ( !file_exists($tmpfile) ) {
+    echo "Error: tidy.php cannot find tmpfile at: $tmpfile \n";
+    exit( 1 );
+}
 
 // let tidy do the work
-#$tidy->parseString($html, $options);
 $tidy->parseFile($tmpfile, $config, 'utf8');
+
+// other things you can do with php's Tidy():
+// $tidy->parseString($html, $options);
 // $tidy->cleanRepair();
 // echo $tidy;
 
-// write buffer back to tmofile
+// write buffer back to tmpfile
 if ( !file_put_contents( $tmpfile, (string)$tidy ) ) {
-	echo "Error: The file '".$tmpfile."' could not be overwritten.\n";
+	echo "Error: The file '".$tmpfile."' could not be written.\n";
 	exit( 1 );
 }
-
-
 
 
 /**
@@ -112,6 +105,7 @@ if ( !file_put_contents( $tmpfile, (string)$tidy ) ) {
  * @return array modified config array
  */
 function parseArguments($defaults) {
+global $tmpfile;
 
 	// arguments starting with '--' will be $options
 	// arguments without will be $files
@@ -119,6 +113,10 @@ function parseArguments($defaults) {
 	$options = array();
 	foreach ( $_SERVER['argv'] as $key => $value ) {
 		if ( $key==0 ) continue;
+        if ( $key==1 ) {
+            $tmpfile = $value;
+            continue;
+        }
 		if ( substr( $value, 0, 2 )=="--" ) {
 			$options[] = $value;
 		} else {
@@ -129,7 +127,7 @@ function parseArguments($defaults) {
 	// loop trough options and overwrite default setting if found in array
 	foreach ( $options as $option ) {
 		
-		list($key,$val) = split('=', $option);
+		list($key,$val) = explode('=', $option);
 		$key = str_replace('--', '', $key);
 
 		if (array_key_exists($key, $defaults)) {
