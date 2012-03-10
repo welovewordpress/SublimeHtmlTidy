@@ -27,7 +27,7 @@ To set up a custom keybinding, you can insert the following line into your `Defa
 
 ## Requirements
 
-On OS X and Linux you need to habe PHP5 installed at `/usr/bin/php`. This should be the case at nearly every modern system.
+On OS X and Linux you need to have PHP5 installed at `/usr/bin/php`. This should be the case at nearly every modern system.
 
 On Windows you need to have PHP5 installed somewhere where HtmlTidy can find it, i.e. in your `PATH`. If you can run `php.exe -v` from the windows command line, all should be fine. If not, and you are sure you have PHP installed, please contact me or file an issue.
 
