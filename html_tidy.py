@@ -15,11 +15,16 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # set different paths for php and temp file on windows
         if sublime.platform() == 'windows':
             tmpfile = pluginpath + '/htmltidy-sublime-buffer.tmp'
+            # check if php.exe is in PATH
             phppath = 'php.exe'
             retval = os.system( '%s -v' % ( phppath ) )
             if not retval == 0:
-                sublime.error_message('HtmlTidy cannot find %s. Make sure it is available in your PATH.' % (phppath))
-                return
+                # try to find php.exe at predefined locations
+                phppath = self.find_phppath()
+                retval = os.system( '%s -v' % ( phppath ) )
+                if not retval == 0:
+                    sublime.error_message('HtmlTidy cannot find php.exe. Make sure it is available in your PATH.')
+                    return
 
         # check if tidy.php is found
         if not os.path.exists( scriptpath ):
@@ -59,8 +64,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 args = args + (" --%s=%s" % (option,custom_value))
 
         # call tidy.php on tmpfile
-        print('HtmlTidy: calling script: %s "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
-        retval = os.system( '%s "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
+        print('HtmlTidy: calling script: "%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
+        retval = os.system( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
         if retval != 0:
             print('HtmlTidy: script returned: %s' % (retval))
             if retval == 32512:
@@ -133,5 +138,32 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             'repeated-attributes' : 'keep-last',
             'break-before-br' : True  
         }
+
+    # get a list of possible locations for php.exe on windows
+    def find_phppath(self):
+        # get list of locations
+        locations = self.get_possible_php_locations()
+        # loop through locations
+        for loc in locations:
+            # check if file exists at location
+            if os.path.exists( loc ):
+                print('HtmlTidy: found php.exe at: %s' % ( loc ) )
+                return loc
+
+    # get a list of possible locations for php.exe on windows
+    def get_possible_php_locations(self):
+        return (
+            r'c:\php\php.exe',
+            r'c:\php5\php.exe',
+            r'c:\windows\php.exe',
+            r'c:\program files\php\php.exe',
+            r'c:\xampp\php\php.exe',
+            r'c:\wamp\bin\php\php5\php.exe',
+            r'c:\wamp\bin\php\php\php.exe',
+            r'C:\wamp\bin\php\php5.3.9\php.exe',
+            r'C:\Program Files\wamp\php\php.exe',
+            r'D:\Program Files\wamp\php\php.exe',
+            r'/usr/bin/php'
+        )
 
 
