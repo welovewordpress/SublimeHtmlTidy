@@ -47,7 +47,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # apply settings    
         settings = sublime.load_settings('HtmlTidy.sublime-settings')    
         # settings = self.view.settings()
-        # indent_spaces = int(settings.get('htmltidy-indent-spaces', 4))
+        # indent_spaces = int(settings.get('indent-spaces', 4))
 
         # build command line arguments
         # leaves out default values
@@ -56,7 +56,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             default_value = supported_options[option]
             if default_value == True : default_value = 1
             if default_value == False: default_value = 0
-            custom_value = settings.get('htmltidy-'+option)
+            custom_value = settings.get(option)
             if custom_value == True : custom_value = 1
             if custom_value == False: custom_value = 0
             if not custom_value == None and not custom_value == default_value:
@@ -161,6 +161,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             r'c:\wamp\bin\php\php5\php.exe',
             r'c:\wamp\bin\php\php\php.exe',
             r'C:\wamp\bin\php\php5.3.9\php.exe',
+            r'C:\wamp\bin\php\php5.3.10\php.exe',
             r'C:\Program Files\wamp\php\php.exe',
             r'D:\Program Files\wamp\php\php.exe',
             r'/usr/bin/php'
