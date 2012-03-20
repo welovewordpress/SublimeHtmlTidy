@@ -33,7 +33,7 @@ On Windows you need to have PHP5 installed somewhere where HtmlTidy can find it,
 
 ## Install
 
-### Package Control (coming soon)
+### Package Control
 
 The easiest way to install this is with [Package Control](http://wbond.net/sublime\_packages/package\_control).
 
