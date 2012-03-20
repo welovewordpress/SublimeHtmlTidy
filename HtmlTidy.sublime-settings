@@ -9,7 +9,7 @@
 	// This option specifies the right margin Tidy uses for line wrapping. 
 	// Tidy tries to wrap lines so that they do not exceed this length. 
 	// Set wrap to zero if you want to disable line wrapping.
-	"htmltidy-wrap": 100,
+	"htmltidy-wrap": 0,
 
 	// This option specifies if Tidy should strip out surplus presentational tags and attributes 
 	// replacing them by style rules and structural markup as appropriate. 
