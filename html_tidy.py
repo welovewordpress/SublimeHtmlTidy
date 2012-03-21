@@ -9,27 +9,22 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         scriptpath = pluginpath + '/tidy.php'
 
         # path to temp file
-        tmpfile = '/tmp/htmltidy-sublime-buffer.tmp'
-        phppath = '/usr/bin/php'
+        tmpfile    = '/tmp/htmltidy-sublime-buffer.tmp'
+        tidyerrors = '/tmp/htmltidy-error-log.tmp'
+        phppath    = '/usr/bin/php'
+        tidypath   = '/usr/bin/tidy'
 
         # set different paths for php and temp file on windows
         if sublime.platform() == 'windows':
-            tmpfile = pluginpath + '/htmltidy-sublime-buffer.tmp'
+            tmpfile  = pluginpath + '/htmltidy-sublime-buffer.tmp'
+            tmpfile  = pluginpath + '/htmltidy-error-log.tmp'
+            tidypath = pluginpath + '/win/tidy.exe'
             # check if php.exe is in PATH
             phppath = 'php.exe'
             retval = os.system( '%s -v' % ( phppath ) )
             if not retval == 0:
                 # try to find php.exe at predefined locations
                 phppath = self.find_phppath()
-                retval = os.system( '%s -v' % ( phppath ) )
-                if not retval == 0:
-                    sublime.error_message('HtmlTidy cannot find php.exe. Make sure it is available in your PATH.')
-                    return
-
-        # check if tidy.php is found
-        if not os.path.exists( scriptpath ):
-            sublime.error_message('HtmlTidy cannot find the script at %s.' % (scriptpath))
-            return
 
         # get current buffer content
         bufferLength  = sublime.Region(0, self.view.size())
@@ -49,14 +44,16 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         
         # load view settings for indentation
         use_tabs = not self.view.settings().get('translate_tabs_to_spaces')
-        tab_size = int(self.view.settings().get('tab_size', 8))
+        tab_size = int(self.view.settings().get('tab_size', 4))
         print('HtmlTidy: use_tabs: %s' % (use_tabs))
         print('HtmlTidy: tab_size: %s' % (tab_size))
 
         # build command line arguments
-        args = '--indent-spaces=%s' % (tab_size)
+        args = '--indent-spaces=%s ' % (tab_size)
+        arg2 = '--indent-spaces %s ' % (tab_size)
         if (use_tabs):
             args = '--tab-size=%s ' % (tab_size)
+            arg2 = '--indent-spaces 4 --tab-size %s ' % (tab_size)
 
         # leave out default values
         for option in supported_options:
@@ -69,18 +66,48 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             if not custom_value == None and not custom_value == default_value:
                 #print "HtmlTidy: setting ", option, ": ", default_value, "->", custom_value
                 args = args + (" --%s=%s" % (option,custom_value))
+                arg2 = arg2 + (" --%s %s" % (option,custom_value))
 
-        # call tidy.php on tmpfile
-        print('HtmlTidy: calling script: "%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
-        retval = os.system( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
-        if retval != 0:
-            print('HtmlTidy: script returned: %s' % (retval))
-            if retval == 32512:
-                sublime.error_message('HtmlTidy cannot find php at %s.' % (phppath))
+
+        # check if native tidy is found
+        if os.path.exists( tidypath ):
+            # call /usr/bin/tidy on tmpfile
+            arg2 += ' --indent 1 --tidy-mark 0 '
+            print('HtmlTidy: calling tidy: "%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
+            retval = os.system( '"%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
+            if retval != 0:
+                print('HtmlTidy: tidy returned error code: %s' % (retval))
+
+            # read error log and delete
+            fileHandle = open ( tidyerrors, 'r' ) 
+            errors = fileHandle.read() 
+            fileHandle.close() 
+            os.remove( tidyerrors )
+            print('HtmlTidy: error log contained: \n\n%s' % (errors))
+
+        else:
+            # check if php is at phppath
+            retval = os.system( '%s -v' % ( phppath ) )
+            if not retval == 0:
+                sublime.error_message('HtmlTidy cannot find php.exe. Make sure it is available in your PATH.')
                 return
-            else:
-                sublime.error_message('There was an error calling the script at %s. Return value: %s' % (scriptpath,retval))
+
+            # check if tidy.php is found - this has become obsolete since it's bundled
+            if not os.path.exists( scriptpath ):
+                sublime.error_message('HtmlTidy cannot find the script at %s.' % (scriptpath))
                 return
+
+            # call tidy.php on tmpfile
+            print('HtmlTidy: calling script: "%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
+            retval = os.system( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
+            if retval != 0:
+                print('HtmlTidy: script returned: %s' % (retval))
+                if retval == 32512:
+                    sublime.error_message('HtmlTidy cannot find php at %s.' % (phppath))
+                    return
+                else:
+                    sublime.error_message('There was an error calling the script at %s. Return value: %s' % (scriptpath,retval))
+                    return
 
         # read tmpfile and delete
         fileHandle = open ( tmpfile, 'r' ) 
