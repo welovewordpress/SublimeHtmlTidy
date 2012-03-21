@@ -44,14 +44,21 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # get supported tidy options
         supported_options = self.get_supported_options()
 
-        # apply settings    
+        # load HtmlTidy settings    
         settings = sublime.load_settings('HtmlTidy.sublime-settings')    
-        # settings = self.view.settings()
-        # indent_spaces = int(settings.get('indent-spaces', 4))
+        
+        # load view settings for indentation
+        use_tabs = not self.view.settings().get('translate_tabs_to_spaces')
+        tab_size = int(self.view.settings().get('tab_size', 8))
+        print('HtmlTidy: use_tabs: %s' % (use_tabs))
+        print('HtmlTidy: tab_size: %s' % (tab_size))
 
         # build command line arguments
-        # leaves out default values
-        args = ''
+        args = '--indent-spaces=%s' % (tab_size)
+        if (use_tabs):
+            args = '--tab-size=%s ' % (tab_size)
+
+        # leave out default values
         for option in supported_options:
             default_value = supported_options[option]
             if default_value == True : default_value = 1
@@ -60,7 +67,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             if custom_value == True : custom_value = 1
             if custom_value == False: custom_value = 0
             if not custom_value == None and not custom_value == default_value:
-                # print "HtmlTidy: setting ", option, ": ", default_value, "->", custom_value
+                #print "HtmlTidy: setting ", option, ": ", default_value, "->", custom_value
                 args = args + (" --%s=%s" % (option,custom_value))
 
         # call tidy.php on tmpfile
@@ -82,13 +89,40 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         os.remove( tmpfile )
         print('HtmlTidy: tmpfile was processed and removed')
 
+        # convert spaces to tabs if view settings say so
+        if (use_tabs):
+            newContent = self.entab( newContent )
+
         # write new content back to buffer
         self.view.replace(edit, bufferLength, self.fixup(newContent))
-
+        
 
     # Fixup from external command
     def fixup(self, string):
         return re.sub(r'\r\n|\r', '\n', string.decode('utf-8'))
+
+    # convert spaces to tabs
+    # http://code.activestate.com/recipes/66433-change-tabsspaces-with-regular-expressions/
+    def entab(self, temp, tab_width=4, all=0):
+
+        # if all is true, every time tab_width number of spaces are found next
+        # to each other, they are converted to a tab.  If false, only those at
+        # the beginning of the line are converted.  Default is false.
+
+        if all:
+            temp = re.sub(r" {" + `tab_width` + r"}", r"\t", temp)
+        else:
+            patt = re.compile(r"^ {" + `tab_width` + r"}", re.M)
+            temp, count = patt.subn(r"\t", temp)
+            i = 1
+            while count > 0:
+                #this only loops a few times, at most six or seven times on
+                #heavily indented code
+                subpatt = re.compile(r"^\t{" + `i` + r"} {" + `tab_width` + r"}", re.M)
+                temp, count = subpatt.subn("\t"*(i+1), temp)
+                i += 1
+        return temp
+
 
     # get supported options and default values
     def get_supported_options(self):
@@ -107,8 +141,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             'bare' : True,
             'fix-uri' : True,
             'indent' : True,
-            'indent-spaces' : 4,
-            'tab-size' : 4,
+            #'indent-spaces' : 4,
+            #'tab-size' : 4,
             'wrap-attributes' : True,
             'wrap' : 0,
             'indent-attributes' : True,
