@@ -79,11 +79,12 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 print('HtmlTidy: tidy returned error code: %s' % (retval))
 
             # read error log and delete
-            fileHandle = open ( tidyerrors, 'r' ) 
-            errors = fileHandle.read() 
-            fileHandle.close() 
-            os.remove( tidyerrors )
-            print('HtmlTidy: error log contained: \n\n%s' % (errors))
+            if os.path.exists( tidyerrors ):
+                fileHandle = open ( tidyerrors, 'r' ) 
+                errors = fileHandle.read() 
+                fileHandle.close() 
+                os.remove( tidyerrors )
+                print('HtmlTidy: error log contained: \n\n%s' % (errors))
 
         else:
             # check if php is at phppath
