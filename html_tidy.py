@@ -16,9 +16,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         # set different paths for php and temp file on windows
         if sublime.platform() == 'windows':
-            tmpfile  = pluginpath + '/htmltidy-sublime-buffer.tmp'
-            tmpfile  = pluginpath + '/htmltidy-error-log.tmp'
-            tidypath = pluginpath + '/win/tidy.exe'
+            tmpfile    = pluginpath + '/htmltidy-sublime-buffer.tmp'
+            tidyerrors = pluginpath + '/htmltidy-error-log.tmp'
+            tidypath   = pluginpath + '/win/tidy.exe'
             # check if php.exe is in PATH
             phppath = 'php.exe'
             retval = os.system( '%s -v' % ( phppath ) )
