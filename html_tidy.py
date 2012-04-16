@@ -90,7 +90,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         else:
             # check if php is at phppath
-            retval = os.system( '%s -v' % ( phppath ) )
+            retval = subprocess.call( '%s -v' % ( phppath ), shell=True )
             if not retval == 0:
                 sublime.error_message('HtmlTidy cannot find php.exe. Make sure it is available in your PATH.')
                 return
@@ -102,7 +102,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
             # call tidy.php on tmpfile
             print('HtmlTidy: calling script: "%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
-            retval = os.system( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
+            retval = subprocess.call( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ), shell=True )
             if retval != 0:
                 print('HtmlTidy: script returned: %s' % (retval))
                 if retval == 32512:
