@@ -1,4 +1,4 @@
-import sublime, sublime_plugin, re, os
+import sublime, sublime_plugin, re, os, subprocess
 
 class HtmlTidyCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -74,7 +74,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             # call /usr/bin/tidy on tmpfile
             arg2 += ' --indent 1 --tidy-mark 0 '
             print('HtmlTidy: calling tidy: "%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
-            retval = os.system( '"%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
+            #     retval = os.system( '"%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
+            retval = subprocess.call( '"%s" %s -q -m -f "%s" "%s"' % ( tidypath, arg2, tidyerrors, tmpfile ), shell=True )
+
             if retval != 0:
                 print('HtmlTidy: tidy returned error code: %s' % (retval))
 
@@ -198,7 +200,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             'tidy-mark' : True,
             'merge-divs' : False,
             'repeated-attributes' : 'keep-last',
-            'break-before-br' : True  
+            'break-before-br' : True,
+            'new-blocklevel-tags' : ''  
         }
 
     # get a list of possible locations for php.exe on windows
