@@ -16,8 +16,10 @@
 	// It works well on the HTML saved by Microsoft Office products.
 	"clean": false,
 
-	// support new HTML5 elements
-	"new-blocklevel-tags": "'header,footer,article,section,hgroup,nav,figure'",
+	// Enable support for new HTML5 tags
+	"new-blocklevel-tags": "'section,header,footer,hgroup,nav,dialog,datalist,details,figcaption,figure,meter,output,progress'",
+	"new-pre-tags":        "'article,aside,summary,mark'",
+	"new-inline-tags":     "'video,audio,canvas,source,embed,ruby,rt,rp,keygen,menu,command,time'",
 
 	// This option specifies if Tidy should print only the contents of the body tag as an HTML fragment.
 	"show-body-only": false,
