@@ -13,12 +13,14 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         tidyerrors = '/tmp/htmltidy-error-log.tmp'
         phppath    = '/usr/bin/php'
         tidypath   = '/usr/bin/tidy'
+        isWindows  = False
 
         # set different paths for php and temp file on windows
         if sublime.platform() == 'windows':
             tmpfile    = pluginpath + '/htmltidy-sublime-buffer.tmp'
             tidyerrors = pluginpath + '/htmltidy-error-log.tmp'
             tidypath   = pluginpath + '/win/tidy.exe'
+            isWindows  = True
             # check if php.exe is in PATH
             phppath = 'php.exe'
             retval = os.system( '%s -v' % ( phppath ) )
@@ -75,7 +77,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             arg2 += ' --indent 1 --tidy-mark 0 '
             print('HtmlTidy: calling tidy: "%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
             #     retval = os.system( '"%s" %s -q -m -f "%s" "%s" ' % ( tidypath, arg2, tidyerrors, tmpfile ) )
-            retval = subprocess.call( '"%s" %s -q -m -f "%s" "%s"' % ( tidypath, arg2, tidyerrors, tmpfile ), shell=True )
+            retval = subprocess.call( '"%s" %s -q -m -f "%s" "%s"' % ( tidypath, arg2, tidyerrors, tmpfile ), shell = not isWindows )
 
             if retval != 0:
                 print('HtmlTidy: tidy returned error code: %s' % (retval))
@@ -90,7 +92,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         else:
             # check if php is at phppath
-            retval = subprocess.call( '%s -v' % ( phppath ), shell=True )
+            retval = subprocess.call( '%s -v' % ( phppath ), shell = not isWindows )
             if not retval == 0:
                 sublime.error_message('HtmlTidy cannot find php.exe. Make sure it is available in your PATH.')
                 return
@@ -102,7 +104,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
             # call tidy.php on tmpfile
             print('HtmlTidy: calling script: "%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ) )
-            retval = subprocess.call( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ), shell=True )
+            retval = subprocess.call( '"%s" "%s" "%s" %s' % ( phppath, scriptpath, tmpfile, args ), shell = not isWindows )
             if retval != 0:
                 print('HtmlTidy: script returned: %s' % (retval))
                 if retval == 32512:
