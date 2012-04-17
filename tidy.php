@@ -61,7 +61,9 @@ $default_options = array(
     'merge-divs' => false,
     'repeated-attributes' => 'keep-last',
     'break-before-br' => true,
-    'new-blocklevel-tags' => ''
+    'new-blocklevel-tags' => '',
+    'new-pre-tags' => '',
+    'new-inline-tags' => ''
 );
 
 ///////////// END OF DEFAULT CONFIGURATION ////////////////
