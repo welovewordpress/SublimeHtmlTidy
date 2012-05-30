@@ -176,7 +176,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             #'indent-spaces' : 4,
             #'tab-size' : 4,
             'wrap-attributes' : True,
-            'wrap' : 0,
+            'wrap' : 68,
             'indent-attributes' : True,
             'join-classes' : False,
             'join-styles' : False,
