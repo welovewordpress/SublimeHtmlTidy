@@ -98,8 +98,9 @@ re_ID = re.compile(r"""<[^>]*?id\s*=\s*("|')(.*?)("|')[^>]*?>""", re.DOTALL | re
 
 
 def tidy_string(input_string, script, args, shell):
-    print 'HtmlTidy: '
-    print args
+    'Adapted from the Sublime Text 1 webdevelopment package.'
+    #print 'HtmlTidy: '
+    #print args
     command = [script] + args
 
     p = subprocess.Popen(
@@ -115,7 +116,8 @@ def tidy_string(input_string, script, args, shell):
 
 
 def remove_duplicate_ids(html):
-    'Removes duplicated IDs in the parsed markup. Adapted from the Sublime Text 1 webdevelopment package.'
+    'Removes duplicated IDs in the parsed markup.'
+    'Also adapted from the Sublime Text 1 webdevelopment package.'
     idsn = defaultdict(int)
     matches = []
 
@@ -144,32 +146,36 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         print('HtmlTidy: invoked on file: %s' % (self.view.file_name()))
 
         # path to plugin - <sublime dir>/Packages/PhpTidy
-        pluginpath = sublime.packages_path() + '/HtmlTidy'
-        scriptpath = pluginpath + '/tidy.php'
+        pluginpath = os.path.join(sublime.packages_path(), 'HtmlTidy')
+        scriptpath = os.path.join(pluginpath, 'tidy.php')
 
         # path to temp file
         phppath = '/usr/bin/php'
         tidypath = '/usr/bin/tidy'
 
-        # set different paths for php and temp file on windows
+        # set different paths for php on windows
         if sublime.platform() == 'windows':
-            tidypath = pluginpath + '/win/tidy.exe'
+            tidypath = os.path.join(pluginpath, 'win', 'tidy.exe')
             tidy_exists = os.system(tidypath + ' -v')
-            if tidy_exists:
+            if not tidy_exists == 0:
                 use_tidyexe = 1
 
             else:
                 phppath = 'php.exe'
-                retval = os.system('%s -v' % (phppath))
+                retval = os.system(phppath + ' -v')
                 if not retval == 0:
                     # try to find php.exe at predefined locations
                     phppath = self.find_phppath()
 
-        # get current buffer content
-        bufferLength = sublime.Region(0, self.view.size())
-        bufferContent = self.view.substr(bufferLength).encode('utf-8')
-
         args = self.get_args()
+
+        # Get current selection(s).
+        if not self.view.sel()[0].empty():
+            # If selection, then make sure not to add body tags and the like.
+            args.extend(["--show-body-only", '1'])
+        else:
+            # If no selection, get the entire view.
+            self.view.sel().add(sublime.Region(0, self.view.size()))
 
         # check if native tidy is found
         if (os.path.exists(tidypath) or use_tidyexe):
@@ -181,14 +187,16 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             script = 'php "{0}"'.format(scriptpath)
             shell = True
 
-        tidied, err = tidy_string(bufferContent, script, args, shell)
+        for sel in self.view.sel():
 
-        # convert spaces to tabs if view settings say so
-        if (not self.view.settings().get('translate_tabs_to_spaces')):
-            tidied = self.entab(tidied)
+            tidied, err = tidy_string(self.view.substr(sel), script, args, shell)
 
-        # write new content back to buffer
-        self.view.replace(edit, bufferLength, self.fixup(tidied))
+            # convert spaces to tabs if view settings say so
+            if (not self.view.settings().get('translate_tabs_to_spaces')):
+                tidied = self.entab(tidied)
+
+            # write new content back to buffer
+            self.view.replace(edit, sel, self.fixup(tidied))
 
     def fixup(self, string):
         'Fixup from external command'
@@ -203,7 +211,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         # load view settings for indentation
         tab_size = int(self.view.settings().get('tab_size', 4))
-        print('HtmlTidy: tab_size: %s' % (tab_size))
+        #print('HtmlTidy: tab_size: %s' % (tab_size))
 
         args.extend(['--tab-size', str(tab_size)])
 
@@ -225,10 +233,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         return args
 
-    # convert spaces to tabs
-    # http://code.activestate.com/recipes/66433-change-tabsspaces-with-regular-expressions/
     def entab(self, temp, tab_width=4, all=0):
-
+        'Convert spaces to tabs'
+        # http://code.activestate.com/recipes/66433-change-tabsspaces-with-regular-expressions/
         # if all is true, every time tab_width number of spaces are found next
         # to each other, they are converted to a tab.  If false, only those at
         # the beginning of the line are converted.  Default is false.
@@ -247,20 +254,10 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 i += 1
         return temp
 
-    # get a list of possible locations for php.exe on windows
     def find_phppath(self):
+        'get a list of possible locations for php.exe on windows'
         # get list of locations
-        locations = self.get_possible_php_locations()
-        # loop through locations
-        for loc in locations:
-            # check if file exists at location
-            if os.path.exists(loc):
-                print('HtmlTidy: found php.exe at: %s' % (loc))
-                return loc
-
-    # get a list of possible locations for php.exe on windows
-    def get_possible_php_locations(self):
-        return (
+        locations = [
             r'c:\php\php.exe',
             r'c:\php5\php.exe',
             r'c:\windows\php.exe',
@@ -273,4 +270,10 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             r'C:\Program Files\wamp\php\php.exe',
             r'D:\Program Files\wamp\php\php.exe',
             r'/usr/bin/php'
-       )
+        ]
+        # loop through locations
+        for loc in locations:
+            # check if file exists at location
+            if os.path.exists(loc):
+                print('HtmlTidy: found php.exe at: %s' % (loc))
+                return loc
