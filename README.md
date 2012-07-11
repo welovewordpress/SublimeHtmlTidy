@@ -7,7 +7,7 @@ This is a Sublime Text 2 plugin allowing you to clean and tidy up your HTML code
 
 It uses a version of `tidy`, which comes bundled with PHP 5.
 
-On OS X and Linux it will use `/usr/bin/php`. On Windows it depends on `php.exe` beeing available in your `PATH`. See requirements below. *Windows support is still beta.*
+On OS X and Linux it will use `/usr/bin/php`. Windows depends on `tidy.exe` (bundled) or `php.exe` being available in your `PATH`. See requirements below. *Windows support is still beta.*
 
 Dedicated to Jeffrey Way @envatowebdev
 
@@ -29,7 +29,7 @@ To set up a custom keybinding, you can insert the following line into your `Defa
 
 On OS X and Linux you need to have PHP5 installed at `/usr/bin/php`. This should be the case at nearly every modern system.
 
-On Windows you need to have PHP5 installed somewhere where HtmlTidy can find it, i.e. in your `PATH`. If you can run `php.exe -v` from the windows command line, all should be fine. If not, and you are sure you have PHP installed, please contact me or file an issue.
+For Windows, The bundled `win/tidy.exe` is used. If you delete it,you need to have PHP5 installed somewhere where HtmlTidy can find it, i.e. in your `PATH`. If you can run `php.exe -v` from the windows command line, all should be fine. If not, and you are sure you have PHP installed, please contact me or file an issue.
 
 ## Install
 
