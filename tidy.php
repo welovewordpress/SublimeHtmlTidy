@@ -5,142 +5,132 @@
  *
  * See README for more information.
  *
- * based on:
- * http://www.php.net/manual/en/tidy.examples.basic.php
- * https://github.com/scribu/wp-phptidy
- * 
  */
-
-
-//////////////// DEFAULT CONFIGURATION ///////////////////
-
-// some, but not all options for tidy
-// found on http://www.php.net/manual/en/tidy.examples.basic.php
-$default_options = array(
-    'show-body-only' => false,
-    'clean' => true,
-    'char-encoding' => 'utf8',
-    'add-xml-decl' => true,
-    'add-xml-space' => false,
-    'output-html' => true,
-    'output-xml' => false,
-    'output-xhtml' => false,
-    'numeric-entities' => false,
-    'ascii-chars' => false,
-    'doctype' => 'strict',
-    'bare' => true,
-    'fix-uri' => true,
-    'indent' => true,
-    'indent-spaces' => 4,
-    'tab-size' => 4,
-    'wrap-attributes' => true,
-    'wrap' => 0,
-    'indent-attributes' => true,
-    'join-classes' => false,
-    'join-styles' => false,
-    'enclose-block-text' => true,
-    'fix-bad-comments' => true,
-    'fix-backslash' => true,
-    'replace-color' => false,
-    'wrap-asp' => false,
-    'wrap-jste' => false,
-    'wrap-php' => false,
-    'write-back' => true,
-    'drop-proprietary-attributes' => false,
-    'hide-comments' => false,
-    'hide-endtags' => false,
-    'literal-attributes' => false,
-    'drop-empty-paras' => true,
-    'enclose-text' => true,
-    'quote-ampersand' => true,
-    'quote-marks' => false,
-    'quote-nbsp' => true,
-    'vertical-space' => true,
-    'wrap-script-literals' => false,
-    'tidy-mark' => true,
-    'merge-divs' => false,
-    'repeated-attributes' => 'keep-last',
-    'break-before-br' => true,
-    'new-blocklevel-tags' => '',
-    'new-pre-tags' => '',
-    'new-inline-tags' => ''
-);
-
-///////////// END OF DEFAULT CONFIGURATION ////////////////
 
 error_reporting( E_ALL );
 
+//////////////// VARIABLES ///////////////////
+
+// some, but not all options for tidy
+// found on tidy.sourceforge.net/docs/quickref.html
+// and tidy.sourceforge.net/docs/tidy_man.html
+// '::' marks all as optional
+
+$short_options = 'o::' +
+    'f::' +
+    'm::' +
+    'i::' +
+    'w::' +
+    'u::' +
+    'c::' +
+    'b::' +
+    'n::' +
+    'e::' +
+    'q::' +
+    'v::' +
+    'h::' ;
+
+$long_options = array(
+    'add-xml-decl::',
+    'add-xml-space::',
+    'alt-text::',
+    'anchor-as-name::',
+    'assume-xml-procins::',
+    'bare::',
+    'clean::',
+    'css-prefix::',
+    'decorate-inferred-ul::',
+    'doctype DocType auto::',
+    'drop-empty-paras::',
+    'drop-font-tags::',
+    'drop-proprietary-attributes::',
+    'enclose-block-text::',
+    'enclose-text::',
+    'escape-cdata::',
+    'fix-backslash::',
+    'fix-bad-comments::',
+    'fix-uri::',
+    'hide-comments::',
+    'hide-endtags::',
+    'indent-cdata::',
+    'input-xml::',
+    'join-classes::',
+    'join-styles::',
+    'literal-attributes::',
+    'logical-emphasis::',
+    'lower-literals::',
+    'merge-divs::',
+    'merge-spans::',
+    'ncr::',
+    'new-blocklevel-tags::',
+    'new-empty-tags::',
+    'new-inline-tags::',
+    'new-pre-tags::',
+    'numeric-entities::',
+    'output-html::',
+    'output-xhtml::',
+    'output-xml::',
+    'preserve-entities::',
+    'quote-ampersand::',
+    'quote-marks::',
+    'quote-nbsp::',
+    'repeated-attributes::',
+    'replace-color::',
+    'show-body-only::',
+    'uppercase-attributes::',
+    'uppercase-tags::',
+    'word-2000::',
+    'break-before-br::',
+    'indent::',
+    'indent-attributes::',
+    'indent-spaces::',
+    'markup::',
+    'punctuation-wrap::',
+    'sort-attributes::',
+    'split::',
+    'tab-size::',
+    'vertical-space::',
+    'wrap::',
+    'wrap-asp::',
+    'wrap-attributes::',
+    'wrap-jste::',
+    'wrap-php::',
+    'wrap-script-literals::',
+    'wrap-sections::',
+    'ascii-chars::',
+    'char-encoding::',
+    'input-encoding::',
+    'language::',
+    'newline::',
+    'output-bom::',
+    'output-encoding::',
+    'error-file::',
+    'force-output::',
+    'gnu-emacs::',
+    'gnu-emacs-file::',
+    'keep-time::',
+    'output-file::',
+    'tidy-mark::',
+    'write-back::'
+);
+
+///////////// PROCEDURES ////////////////
+
 if ( !version_compare( phpversion(), "5.0", ">=" ) ) {
-    echo "Error: tidy.php requires PHP 5 or newer.\n";
+    $messages .= "Error: tidy.php requires PHP 5 or newer.\n";
     exit( 1 );
 }
+
+// Parse arguments using the lists above.
+$arguments = getopt($short_options, $long_options);
 
 $tidy = new Tidy();
-$tmpfile = '';
+$tidy->parseString(STDIN, $arguments, 'utf8');
 
-// merge default options with command line arguments
-$config = parseArguments($default_options);
+fwrite(STDOUT, (string)$tidy);
 
-// check if input file exists
-if ( !file_exists($tmpfile) ) {
-    echo "Error: tidy.php cannot find tmpfile at: $tmpfile \n";
-    exit( 1 );
+if ($tidy->errorBuffer) {
+    fwrite(STDERR, $tidy->errorBuffer);
 }
 
-// let tidy do the work
-$tidy->parseFile($tmpfile, $config, 'utf8');
-
-// other things you can do with php's Tidy():
-// $tidy->parseString($html, $options);
-// $tidy->cleanRepair();
-// echo $tidy;
-
-// write buffer back to tmpfile
-if ( !file_put_contents( $tmpfile, (string)$tidy ) ) {
-	echo "Error: The file '".$tmpfile."' could not be written.\n";
-	exit( 1 );
-}
-
-
-/**
- * parseArguments: parse command line arguments and modify $defaults array
- * @param  array $defaults tidy config array to be modified
- * @return array modified config array
- */
-function parseArguments($defaults) {
-global $tmpfile;
-
-	// arguments starting with '--' will be $options
-	// arguments without will be $files
-	$files = array();
-	$options = array();
-	foreach ( $_SERVER['argv'] as $key => $value ) {
-		if ( $key==0 ) continue;
-        if ( $key==1 ) {
-            $tmpfile = $value;
-            continue;
-        }
-		if ( substr( $value, 0, 2 )=="--" ) {
-			$options[] = $value;
-		} else {
-			$files[] = $value;
-		}
-	}
-
-	// loop trough options and overwrite default setting if found in array
-	foreach ( $options as $option ) {
-		
-		list($key,$val) = explode('=', $option);
-		$key = str_replace('--', '', $key);
-
-		if (array_key_exists($key, $defaults)) {
-			$defaults[$key] = $val;
-		} else {
-			echo "Unknown option: '".$option."'\n";
-			exit( 1 );			
-		}
-
-	}
-
-	return $defaults;
-}
+?>
