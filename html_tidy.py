@@ -203,6 +203,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 if (not self.view.settings().get('translate_tabs_to_spaces')):
                     tidied = self.entab(tidied)
 
+                tidied = remove_duplicate_ids(tidied)
+
                 # write new content back to buffer
                 self.view.replace(edit, sel, self.fixup(tidied))
 
