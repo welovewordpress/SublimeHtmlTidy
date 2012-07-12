@@ -117,20 +117,20 @@ $long_options = array(
 ///////////// PROCEDURES ////////////////
 
 if ( !version_compare( phpversion(), "5.0", ">=" ) ) {
-    $messages .= "Error: tidy.php requires PHP 5 or newer.\n";
+    fwrite( STDERR, "Error: tidy.php requires PHP 5 or newer.\n" );
     exit( 1 );
 }
 
 // Parse arguments using the lists above.
-$arguments = getopt($short_options, $long_options);
+$arguments = getopt( $short_options, $long_options );
 
 $tidy = new Tidy();
-$tidy->parseString(STDIN, $arguments, 'utf8');
+$tidy->parseString( STDIN, $arguments, 'utf8' );
 
-fwrite(STDOUT, (string)$tidy);
+fwrite( STDOUT, (string)$tidy );
 
-if ($tidy->errorBuffer) {
-    fwrite(STDERR, $tidy->errorBuffer);
+if ( $tidy->errorBuffer ) {
+    fwrite( STDERR, $tidy->errorBuffer );
 }
 
 ?>
