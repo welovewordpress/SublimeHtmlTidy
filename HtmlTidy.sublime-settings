@@ -2,7 +2,10 @@
 	// This option specifies the right margin Tidy uses for line wrapping. 
 	// Tidy tries to wrap lines so that they do not exceed this length. 
 	// Set wrap to zero if you want to disable line wrapping.
-	"wrap": 0,
+	"wrap": "0",
+
+	// Suppress the welcome and informational messages.
+	"quiet": true,
 
 	// This option specifies if Tidy should strip out surplus presentational tags and attributes 
 	// replacing them by style rules and structural markup as appropriate. 
@@ -10,9 +13,9 @@
 	"clean": false,
 
 	// Enable support for new HTML5 tags
-	"new-blocklevel-tags": "'section,header,footer,hgroup,nav,dialog,datalist,details,figcaption,figure,meter,output,progress'",
-	"new-pre-tags":        "'article,aside,summary,mark'",
-	"new-inline-tags":     "'video,audio,canvas,source,embed,ruby,rt,rp,keygen,menu,command,time'",
+	"new-blocklevel-tags": "section,header,footer,hgroup,nav,dialog,datalist,details,figcaption,figure,meter,output,progress",
+	"new-pre-tags":        "article,aside,summary,mark",
+	"new-inline-tags":     "video,audio,canvas,source,embed,ruby,rt,rp,keygen,menu,command,time",
 
 	// This option specifies if Tidy should print only the contents of the body tag as an HTML fragment.
 	"show-body-only": false,
@@ -21,10 +24,10 @@
 	"indent-attributes": false,
 
 	// This option specifies if Tidy should indent block-level tags
-    "indent": "auto",
+  "indent": "auto",
 
-    //This option specifies the number of spaces Tidy uses to indent content
-    "indent-spaces": "2",
+  //This option specifies the number of spaces Tidy uses to indent content
+  "indent-spaces": "2",
 
 	// This option specifies if Tidy should line wrap attribute values, for easier editing. 
 	"wrap-attributes": false,
