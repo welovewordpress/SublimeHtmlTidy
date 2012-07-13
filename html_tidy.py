@@ -95,6 +95,12 @@ supported_options = [
 
 re_ID = re.compile(r"""<[^>]*?id\s*=\s*("|')(.*?)("|')[^>]*?>""", re.DOTALL | re.MULTILINE)
 
+# Path to plugin, script and libraries.
+pluginpath = os.path.join(sublime.packages_path(), 'HtmlTidy')
+scriptpath = os.path.join(pluginpath, 'tidy.php')
+phppath = '/usr/bin/php'
+tidypath = '/usr/bin/tidy'
+
 ############### FUNCTIONS ###############
 
 
@@ -148,29 +154,40 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         print('HtmlTidy: invoked on file: %s' % (self.view.file_name()))
 
-        # path to plugin - <sublime dir>/Packages/PhpTidy
-        pluginpath = os.path.join(sublime.packages_path(), 'HtmlTidy')
-        scriptpath = os.path.join(pluginpath, 'tidy.php')
-
-        # path to temp file
-        phppath = '/usr/bin/php'
-        tidypath = '/usr/bin/tidy'
-
-        # set different paths for php on windows
+        # Set different options for windows.
         if sublime.platform() == 'windows':
-            tidypath = os.path.normpath(pluginpath + '/win/tidy.exe')
-            tidy_exists = os.system(tidypath + ' -v')
-            if not tidy_exists == 0:
-                use_tidyexe = True
+            # Shell is always false for Windows.
+            shell = False
+            # Use .exes, not *nix paths
+            phppath = 'php.exe'
+            tidypath = pluginpath + '/win/tidy.exe'
 
+        # Option for user to give their own path to Tidy.
+        tidypath = self.view.settings().get('tidypath', tidypath)
+        tidypath = os.path.normpath(tidypath)
+
+        # Default to using tidy, rather than PHP
+        if os.path.exists(tidypath):
+            use_tidy = True
+            print "HTMLTidy: Using Tidy"
+
+        else:
+            if os.path.exists(phppath):
+                print "HTMLTidy: Using Tidy library in PHP."
             else:
-                phppath = 'php.exe'
-                retval = os.system(phppath + ' -v')
-                if not retval == 0:
-                    # try to find php.exe at predefined locations
-                    phppath = self.find_phppath()
+                # try to find php at predefined locations
+                phppath = self.find_phppath()
+                if phppath:
+                    print "HTMLTidy: Using Tidy library in PHP."
+                else:
+                    print "HTMLTidy: Couldn't find Tidy or PHP anywhere. Sorry, I can't tidy your markup."
 
         args = self.get_args()
+        # load view settings for indentation
+
+        tab_size = int(self.view.settings().get('tab_size', 4))
+        #print('HtmlTidy: tab_size: %s' % (tab_size))
+        args.extend(['--tab-size', str(tab_size)])
 
         # Get current selection(s).
         if not self.view.sel()[0].empty():
@@ -182,26 +199,25 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             self.view.sel().add(sublime.Region(0, self.view.size()))
 
         # check if native tidy is found
-        if (os.path.exists(tidypath) or use_tidyexe):
+        if (use_tidy):
             # call /usr/bin/tidy on tmpfile
             script = tidypath
-            shell = False
 
         else:
             script = 'php "{0}"'.format(scriptpath)
             shell = True
 
-        print "HtmlTidy: Passing this script and arguments: " + script + " " + str(args)
+        #print "HtmlTidy: Passing this script and arguments: " + script + " " + str(args)
         for sel in self.view.sel():
 
             tidied, err, retval = tidy_string(self.view.substr(sel), script, args, shell)
 
-            err = err.decode('utf8').replace("\n\n", "\n")
+            err = self.fixup(err)
 
             if tidied and (retval == 0 or retval == 1):
                 # convert spaces to tabs if view settings say so
                 if (not self.view.settings().get('translate_tabs_to_spaces')):
-                    tidied = self.entab(tidied)
+                    tidied = self.entab(tidied, tab_size)
 
                 tidied = remove_duplicate_ids(tidied)
 
@@ -231,12 +247,6 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         # load HtmlTidy settings
         settings = sublime.load_settings('HtmlTidy.sublime-settings')
-
-        # load view settings for indentation
-        tab_size = int(self.view.settings().get('tab_size', 4))
-        #print('HtmlTidy: tab_size: %s' % (tab_size))
-
-        args.extend(['--tab-size', str(tab_size)])
 
         # leave out default values
         for option in supported_options:
@@ -299,5 +309,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             # normpath takes care of slash escaping problems on windows.
             loc = os.path.normpath(loc)
             if os.path.exists(loc):
-                print('HtmlTidy: found php.exe at: %s' % (loc))
+                print('HtmlTidy: found php.exe at: ' + loc)
                 return loc
+
+            return False
