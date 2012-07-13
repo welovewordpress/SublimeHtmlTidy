@@ -250,6 +250,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # This extends the argument just given, so that a user-given value for tab_size takes precedence.
         args = get_args(args)
 
+        allow_dupe_ids = self.view.settings().get('allow-duplicate-ids', False)
+
         # Get current selection(s).
         if not self.view.sel()[0].empty():
             # If selection, then make sure not to add body tags and the like.
@@ -271,7 +273,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 if (not self.view.settings().get('translate_tabs_to_spaces')):
                     tidied = entab(tidied, tab_size)
 
-                tidied = remove_duplicate_ids(tidied)
+                if allow_dupe_ids == False:
+                    tidied = remove_duplicate_ids(tidied)
 
                 # write new content back to buffer
                 self.view.replace(edit, sel, fixup(tidied))

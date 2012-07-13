@@ -48,4 +48,7 @@
   // possible options: omit, auto, strict, transitional, user
   "doctype": "strict"
 
+  // By default, the plugin doesn't allow duplicate ids (id="dupe" is changed to id="dupe2").
+  // To allow duplicate IDs, add this option to the HTMLTidy user settings file 
+  //"allow-duplicate-ids": true
 }
