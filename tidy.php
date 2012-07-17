@@ -124,8 +124,10 @@ if ( !version_compare( phpversion(), "5.0", ">=" ) ) {
 // Parse arguments using the lists above.
 $arguments = getopt( $short_options, $long_options );
 
+$input = stream_get_contents(STDIN);
+
 $tidy = new Tidy();
-$tidy->parseString( STDIN, $arguments, 'utf8' );
+$tidy->parseString( $input, $arguments, 'utf8' );
 
 fwrite( STDOUT, (string)$tidy );
 
