@@ -160,19 +160,19 @@ def find_tidier():
             pass
 
     try:
+        subprocess.call(['php', '-v'])
+        print "HTMLTidy: Using PHP Tidy module."
+        return 'php "' + os.path.normpath(scriptpath) + '"'
+    except OSError:
+        print "HTMLTidy: Not using PHP"
+        pass
+
+    try:
         subprocess.call(['tidy', '-v'])
         print "HTMLTidy: using Tidy found in PATH"
         return "tidy"
     except OSError:
         print "HTMLTidy: Didn't find Tidy in the PATH."
-        pass
-
-    try:
-        subprocess.call(['php', '-v'])
-        print "HTMLTidy: Using PHP Tidy module."
-        return 'php ' + os.path.normpath(scriptpath)
-    except OSError:
-        print "HTMLTidy: Not using PHP"
         pass
 
     raise OSError
