@@ -27,7 +27,7 @@
   "indent": "auto",
 
   //This option specifies the number of spaces Tidy uses to indent content
-  "indent-spaces": "2",
+  "indent-spaces": "4",
 
   // This option specifies if Tidy should line wrap attribute values, for easier editing. 
   "wrap-attributes": false,
