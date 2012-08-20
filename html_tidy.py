@@ -105,9 +105,17 @@ scriptpath = os.path.join(pluginpath, 'tidy.php')
 
 def tidy_string(input_string, script, args):
     'Adapted from the Sublime Text 1 webdevelopment package.'
-    #print 'HtmlTidy: '
-    #print args
-    command = [script] + args
+
+    # this didn't pass the arguments as needed (issue #15)
+    # tidy.php needs --arg=val instead of --arg val
+    # command = [script] + args
+    
+    # convert args from ['--abc', '123', '--xyz', '789']
+    # to [' --abc', '=123', ' --xyz', '=789'] 
+    arguments = ['=%s' % elem if i % 2 else ' %s' % elem for i, elem in enumerate(args)]
+
+    command = ''.join( [script] + arguments )
+    print 'HtmlTidy: ' + command
 
     p = subprocess.Popen(
         command,
