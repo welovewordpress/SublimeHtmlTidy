@@ -2,7 +2,7 @@
   // This option specifies the right margin Tidy uses for line wrapping. 
   // Tidy tries to wrap lines so that they do not exceed this length. 
   // Set wrap to zero if you want to disable line wrapping.
-  "wrap": "0",
+  "wrap": 0,
 
   // Suppress the welcome and informational messages.
   "quiet": true,
@@ -23,11 +23,13 @@
   // This option specifies if Tidy should begin each attribute on a new line.
   "indent-attributes": false,
 
-  // This option specifies if Tidy should indent block-level tags
-  "indent": "auto",
+  // This option specifies how Tidy should indent tags.
+  // possible values: true, auto, false
+  // "auto" doesn't seem to work with PHP Tidy library
+  "indent": true,
 
   //This option specifies the number of spaces Tidy uses to indent content
-  "indent-spaces": "2",
+  "indent-spaces": 4,
 
   // This option specifies if Tidy should line wrap attribute values, for easier editing. 
   "wrap-attributes": false,
