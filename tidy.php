@@ -16,18 +16,18 @@ error_reporting( E_ALL );
 // and tidy.sourceforge.net/docs/tidy_man.html
 // '::' marks all as optional
 
-$short_options = 'o::' +
-    'f::' +
-    'm::' +
-    'i::' +
-    'w::' +
-    'u::' +
-    'c::' +
-    'b::' +
-    'n::' +
-    'e::' +
-    'q::' +
-    'v::' +
+$short_options = 'o::' .
+    'f::' .
+    'm::' .
+    'i::' .
+    'w::' .
+    'u::' .
+    'c::' .
+    'b::' .
+    'n::' .
+    'e::' .
+    'q::' .
+    'v::' .
     'h::' ;
 
 $long_options = array(
@@ -126,8 +126,14 @@ $arguments = getopt( $short_options, $long_options );
 
 $input = stream_get_contents(STDIN);
 
-$tidy = new Tidy();
-$tidy->parseString( $input, $arguments, 'utf8' );
+try {
+    $tidy = new Tidy();
+    $tidy->parseString( $input, $arguments, 'utf8' );
+
+} catch (Exception $e) {
+    fwrite( STDERR, "Error: PHP doesn't have libtidy installed.\n" );
+    exit( 1 );
+}
 
 fwrite( STDOUT, (string)$tidy );
 
