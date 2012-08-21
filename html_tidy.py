@@ -180,7 +180,7 @@ def fixup(string):
 def compile_args(args, script, style):
     'Take a list of tuples and present it as either a list of a string in --opt=arg style'
     if style == 'string':
-        return script + ' ' + ' '.join(['--' + a[0] + '=' + a[1] for a in args])
+        return script + ' ' + ' '.join([a[0] + '=' + a[1] for a in args])
     if style == 'list':
         output = []
         for a in args:
@@ -208,7 +208,7 @@ def get_args(args):
             custom_value = 0
 
         # print "HtmlTidy: setting " + option + ": " + custom_value
-        args += [(option, str(custom_value))]
+        args += [('--' + option, str(custom_value))]
 
     return args
 
@@ -249,7 +249,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         tab_size = int(self.view.settings().get('tab_size', 4))
         #print('HtmlTidy: tab_size: %s' % (tab_size))
-        args = [('indent-spaces', str(tab_size))]
+        args = [('--indent-spaces', str(tab_size))]
 
         # Get arguments from config files.
         # This extends the argument just given, so that a user-given value for tab_size takes precedence.
@@ -260,7 +260,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # Get current selection(s).
         if not self.view.sel()[0].empty():
             # If selection, then make sure not to add body tags and the like.
-            args += [('show-body-only', '1')]
+            args += [('--show-body-only', '1')]
 
         else:
             # If no selection, get the entire view.
