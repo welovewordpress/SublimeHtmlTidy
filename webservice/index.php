@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * tidy.php
@@ -117,33 +116,56 @@ $long_options = array(
 ///////////// PROCEDURES ////////////////
 
 if ( !version_compare( phpversion(), "5.2", ">=" ) ) {
-    fwrite( STDERR, "Error: tidy.php requires PHP 5.2 or newer.\n" );
+    echo( "Error: tidy.php requires PHP 5.2 or newer.\n" );
+    echo( "You are using PHP ".phpversion() );
     exit( 1 );
 }
 
-if ( ! class_exists('Tidyx') ) {
-    fwrite( STDERR, "Error: tidy.php requires PHP 5.2 with libtidy support built in.\n" );
+if ( ! class_exists('Tidy') ) {
+    echo( "Error: tidy.php requires PHP 5 with libtidy support built in.\n" );
     exit( 1 );
 }
 
 // Parse arguments using the lists above.
-$arguments = getopt( $short_options, $long_options );
+// $arguments = getopt( $short_options, $long_options );
+// $input = stream_get_contents(STDIN);
 
-$input = stream_get_contents(STDIN);
+
+$arguments = stripslashes( $_POST['arguments'] );
+$input = base64_decode( $_POST['content'] );
+
+// print_r($arguments);
+// print_r($input);
+
+// convert python list as string to php array
+$arguments = substr( $arguments, 2, -2);
+$arguments = explode("', '", $arguments);
+
+// remove first item 'webservice'
+array_shift($arguments);
+
+$tidy_arguments = array();
+for ($i=0; $i < count($arguments); $i+=2) { 
+    $arg = substr( $arguments[$i], 2);
+    $val = $arguments[$i+1];
+    $tidy_arguments[ $arg ] = $val;
+}
+
 
 try {
     $tidy = new Tidy();
-    $tidy->parseString( $input, $arguments, 'utf8' );
+    $tidy->parseString( $input, $tidy_arguments, 'utf8' );
 
 } catch (Exception $e) {
-    fwrite( STDERR, "Error: PHP doesn't have libtidy installed.\n" );
+    echo( "Error: PHP doesn't have libtidy installed.\n" );
     exit( 1 );
 }
 
-fwrite( STDOUT, (string)$tidy );
+echo $tidy;
 
-if ( $tidy->errorBuffer ) {
-    fwrite( STDERR, $tidy->errorBuffer );
-}
+// maybe later pass result as json and pass errors and warnings too...
+// if ( $tidy->errorBuffer ) {
+//     echo "\n\n-----\n";
+//     echo $tidy->errorBuffer;
+// }
 
-?>

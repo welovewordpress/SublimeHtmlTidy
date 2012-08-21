@@ -5,6 +5,9 @@ import re
 import os
 import sys
 import subprocess
+import urllib
+import urllib2
+import base64
 from collections import defaultdict
 
 ############### CONSTANTS ###############
@@ -105,6 +108,24 @@ scriptpath = os.path.join(pluginpath, 'tidy.php')
 
 def tidy_string(input_string, command):
 
+    # call webservice
+    if 'webservice' == command[0]:
+
+        url = 'http://tidy.welovewordpress.de/webservice/'
+        values = { 'content' : base64.b64encode( input_string.encode('utf8') ), 
+                   'arguments' : str(command) }
+
+        data = urllib.urlencode( values )
+        req = urllib2.Request(url, data, headers={"Accept" : "text/html"} )
+        response = urllib2.urlopen(req)
+        returned_content = response.read()
+        # print 'HtmlTidy: returned_content ' + returned_content
+        tidied = returned_content
+        # error = 'the web api responded: ' + str(returned_content)
+        error = ''
+        returncode = 0
+        return tidied, error, returncode
+
     p = subprocess.Popen(
         command,
         bufsize=-1,
@@ -143,32 +164,67 @@ def remove_duplicate_ids(html):
     return html
 
 
+def check_php_version(command):
+
+    p = subprocess.Popen(
+        command,
+        bufsize=-1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        shell=True,
+        universal_newlines=True
+    )
+
+    response, error = p.communicate()
+    print "HtmlTidy: response: " + response;
+    print "HtmlTidy: p.returncode: " + p.returncode;
+    print "HtmlTidy: error: " + error;
+    
+    return false
+
+
 def find_tidier():
-    ' Try bundled tidy (if windows), then Tidy in path, then php.'
-    if sublime.platform() == 'windows':
-        try:
-            tidypath = os.path.normpath(pluginpath + '/win/tidy.exe')
-            subprocess.call([tidypath, "-v"])
-            print "HTMLTidy: using Tidy found here: " + tidypath
-            return tidypath, 'list'
-        except OSError:
-            print "HTMLTidy: Didn't find tidy.exe in " + pluginpath
-            pass
+    # ' Try bundled tidy (if windows), then Tidy in path, then php.'
+    # if sublime.platform() == 'windows':
+    #     try:
+    #         tidypath = os.path.normpath(pluginpath + '/win/tidy.exe')
+    #         subprocess.call([tidypath, "-v"])
+    #         print "HTMLTidy: using Tidy found here: " + tidypath
+    #         return tidypath, 'list'
+    #     except OSError:
+    #         print "HTMLTidy: Didn't find tidy.exe in " + pluginpath
+    #         pass
+
+    # 
     try:
         subprocess.call(['php', '-v'])
-        print "HTMLTidy: Using PHP Tidy module."
-        return 'php "' + os.path.normpath(scriptpath) + '"', 'string'
+
+        print "HTMLTidy: Checking PHP Tidy module..."
+        retval = subprocess.call('php "' + os.path.normpath(scriptpath) + '" --selfcheck', shell = True)
+
+        if retval == 0:
+            print "HTMLTidy: Using PHP Tidy module."
+            # print "HTMLTidy: retval: " + str(retval)
+            return 'php "' + os.path.normpath(scriptpath) + '"', 'string'
+        else:
+            print "HTMLTidy: Your PHP version doesn't include Tidy support"
+            # print "HTMLTidy: retval: " + str(retval)
+            pass
+
     except OSError:
         print "HTMLTidy: Not using PHP"
         pass
 
-    try:
-        subprocess.call(['tidy', '-v'])
-        print "HTMLTidy: using Tidy found in PATH"
-        return "tidy", 'string'
-    except OSError:
-        print "HTMLTidy: Didn't find Tidy in the PATH."
-        pass
+    return "webservice", 'list'
+
+    # try:
+    #     subprocess.call(['tidy', '-v'])
+    #     print "HTMLTidy: using Tidy found in PATH"
+    #     return "tidy", 'string'
+    # except OSError:
+    #     print "HTMLTidy: Didn't find Tidy in the PATH."
+    #     pass
 
     raise OSError
 
@@ -249,8 +305,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             return
 
         tab_size = int(self.view.settings().get('tab_size', 4))
-        #print('HtmlTidy: tab_size: %s' % (tab_size))
+        # print('HtmlTidy: tab_size: %s' % (tab_size))
         args = [('--indent-spaces', str(tab_size))]
+        args = [('--tab-size', str(tab_size))]
 
         # Get arguments from config files.
         # This extends the argument just given, so that a user-given value for tab_size takes precedence.
