@@ -112,11 +112,11 @@ def tidy_string(input_string, command):
     if 'webservice' == command[0]:
 
         url = 'http://tidy.welovewordpress.de/webservice/'
-        values = { 'content' : base64.b64encode( input_string.encode('utf8') ), 
-                   'arguments' : str(command) }
+        values = {'content': base64.b64encode(input_string.encode('utf8')),
+                   'arguments': str(command)}
 
-        data = urllib.urlencode( values )
-        req = urllib2.Request(url, data, headers={"Accept" : "text/html"} )
+        data = urllib.urlencode(values)
+        req = urllib2.Request(url, data, headers={"Accept": "text/html"})
         response = urllib2.urlopen(req)
         returned_content = response.read()
         # print 'HtmlTidy: returned_content ' + returned_content
@@ -177,11 +177,11 @@ def check_php_version(command):
     )
 
     response, error = p.communicate()
-    print "HtmlTidy: response: " + response;
-    print "HtmlTidy: p.returncode: " + p.returncode;
-    print "HtmlTidy: error: " + error;
-    
-    return false
+    print "HtmlTidy: response: " + response
+    print "HtmlTidy: p.returncode: " + p.returncode
+    print "HtmlTidy: error: " + error
+
+    return False
 
 
 def find_tidier():
@@ -195,13 +195,12 @@ def find_tidier():
     #     except OSError:
     #         print "HTMLTidy: Didn't find tidy.exe in " + pluginpath
     #         pass
-
-    # 
+    #
     try:
         subprocess.call(['php', '-v'])
 
         print "HTMLTidy: Checking PHP Tidy module..."
-        retval = subprocess.call('php "' + os.path.normpath(scriptpath) + '" --selfcheck', shell = True)
+        retval = subprocess.call('php "' + os.path.normpath(scriptpath) + '" --selfcheck', shell=True)
 
         if retval == 0:
             print "HTMLTidy: Using PHP Tidy module."
