@@ -22,7 +22,7 @@ supported_options = [
     'clean',
     'css-prefix',
     'decorate-inferred-ul',
-    'doctype DocType auto',
+    'doctype',
     'drop-empty-paras',
     'drop-font-tags',
     'drop-proprietary-attributes',
