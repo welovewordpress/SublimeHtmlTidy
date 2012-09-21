@@ -311,11 +311,14 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         else:
             # If no selection, get the entire view.
+            deselect_flag = True
             self.view.sel().add(sublime.Region(0, self.view.size()))
 
         command = compile_args(args, script, style=arg_type)
+
         print 'HtmlTidy: ' + str(command)
         #print "HtmlTidy: Passing this script and arguments: " + script + " " + str(args)
+
         for sel in self.view.sel():
 
             tidied, err, retval = tidy_string(self.view.substr(sel), command)
@@ -333,6 +336,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 # write new content back to buffer
                 self.view.replace(edit, sel, fixup(tidied))
 
+                if deselect_flag:
+                    self.deselect()
+
                 if retval == 1:
                     print "HTMLTidy: Tidy had some warnings for you:\n" + err
 
@@ -344,3 +350,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 # Append the given command to the error message.
                 nv.insert(edit, 0, err + "\n" + str(command))
                 nv.set_name('HTMLTidy: Tidy errors')
+
+    def deselect(self):
+        """Remove selection and place pointer at top of document (adapted from https://gist.github.com/1608283)."""
+        top = self.view.sel()[0].a
+        self.view.sel().clear()
+        self.view.sel().add(sublime.Region(top, top))
