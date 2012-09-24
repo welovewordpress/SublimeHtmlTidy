@@ -22,7 +22,7 @@ supported_options = [
     'clean',
     'css-prefix',
     'decorate-inferred-ul',
-    'doctype DocType auto',
+    'doctype',
     'drop-empty-paras',
     'drop-font-tags',
     'drop-proprietary-attributes',
@@ -108,36 +108,39 @@ scriptpath = os.path.join(pluginpath, 'tidy.php')
 
 def tidy_string(input_string, command):
 
-    # call webservice
     if 'webservice' == command[0]:
+        try:
+            # call webservice
+            url = 'http://tidy.welovewordpress.de/webservice/'
+            values = {'content': base64.b64encode(input_string.encode('utf8')),
+                       'arguments': str(command)}
 
-        url = 'http://tidy.welovewordpress.de/webservice/'
-        values = { 'content' : base64.b64encode( input_string.encode('utf8') ), 
-                   'arguments' : str(command) }
+            data = urllib.urlencode(values)
+            req = urllib2.Request(url, data, headers={"Accept": "text/html"})
+            response = urllib2.urlopen(req)
+            returned_content = response.read()
+            # print 'HtmlTidy: returned_content ' + returned_content
+            tidied = returned_content
+            # error = 'the web api responded: ' + str(returned_content)
+            error = ''
+            returncode = 0
+            return tidied, error, returncode
+        except Exception as e:
+            msg = 'Had a problem communicating with the webservice: {0}'.format(e)
+            return input_string, msg, -1
+    else:
+        p = subprocess.Popen(
+            command,
+            bufsize=-1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            shell=True,
+            universal_newlines=True
+        )
 
-        data = urllib.urlencode( values )
-        req = urllib2.Request(url, data, headers={"Accept" : "text/html"} )
-        response = urllib2.urlopen(req)
-        returned_content = response.read()
-        # print 'HtmlTidy: returned_content ' + returned_content
-        tidied = returned_content
-        # error = 'the web api responded: ' + str(returned_content)
-        error = ''
-        returncode = 0
-        return tidied, error, returncode
-
-    p = subprocess.Popen(
-        command,
-        bufsize=-1,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        shell=True,
-        universal_newlines=True
-    )
-
-    tidied, error = p.communicate(input_string.encode('utf8'))
-    return tidied, error, p.returncode
+        tidied, error = p.communicate(input_string.encode('utf8'))
+        return tidied, error, p.returncode
 
 
 def remove_duplicate_ids(html):
@@ -164,10 +167,9 @@ def remove_duplicate_ids(html):
     return html
 
 
-def check_php_version(command):
-
+def check_php():
     p = subprocess.Popen(
-        command,
+        'php -i | grep libTidy',
         bufsize=-1,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -176,57 +178,43 @@ def check_php_version(command):
         universal_newlines=True
     )
 
-    response, error = p.communicate()
-    print "HtmlTidy: response: " + response;
-    print "HtmlTidy: p.returncode: " + p.returncode;
-    print "HtmlTidy: error: " + error;
-    
-    return false
+    if p.communicate()[0] == '':
+        return False
+    else:
+        return True
 
 
-def find_tidier():
-    # ' Try bundled tidy (if windows), then Tidy in path, then php.'
-    # if sublime.platform() == 'windows':
-    #     try:
-    #         tidypath = os.path.normpath(pluginpath + '/win/tidy.exe')
-    #         subprocess.call([tidypath, "-v"])
-    #         print "HTMLTidy: using Tidy found here: " + tidypath
-    #         return tidypath, 'list'
-    #     except OSError:
-    #         print "HTMLTidy: Didn't find tidy.exe in " + pluginpath
-    #         pass
+def find_tidier(prefer_tidy):
+    ''' If user prefers exe or php, try those. Otherwise, user the webservice.'''
 
-    # 
-    try:
-        subprocess.call(['php', '-v'])
-
-        print "HTMLTidy: Checking PHP Tidy module..."
-        retval = subprocess.call('php "' + os.path.normpath(scriptpath) + '" --selfcheck', shell = True)
-
-        if retval == 0:
-            print "HTMLTidy: Using PHP Tidy module."
-            # print "HTMLTidy: retval: " + str(retval)
-            return 'php "' + os.path.normpath(scriptpath) + '"', 'string'
-        else:
-            print "HTMLTidy: Your PHP version doesn't include Tidy support"
-            # print "HTMLTidy: retval: " + str(retval)
+    if prefer_tidy == 'exe':
+        try:
+            tidypath = os.path.normpath(pluginpath + '/win/tidy.exe')
+            subprocess.call([tidypath, "-v"])
+            print "HTMLTidy: using Tidy found here: " + tidypath
+            return tidypath, 'list'
+        except OSError:
+            print "HTMLTidy: Didn't find tidy.exe in " + pluginpath
             pass
 
-    except OSError:
-        print "HTMLTidy: Not using PHP"
-        pass
+    elif prefer_tidy == 'php':
+        try:
+            print "HTMLTidy: Checking PHP Tidy module..."
+            if check_php():
+
+                print "HTMLTidy: Using PHP Tidy module."
+                # print "HTMLTidy: retval: " + str(retval)
+                return 'php "' + os.path.normpath(scriptpath) + '"', 'string'
+            else:
+                print "HTMLTidy: Your PHP version doesn't include Tidy support"
+                # print "HTMLTidy: retval: " + str(retval)
+                pass
+
+        except OSError:
+            print "HTMLTidy: Not using PHP"
+            pass
 
     return "webservice", 'list'
-
-    # try:
-    #     subprocess.call(['tidy', '-v'])
-    #     print "HTMLTidy: using Tidy found in PATH"
-    #     return "tidy", 'string'
-    # except OSError:
-    #     print "HTMLTidy: Didn't find Tidy in the PATH."
-    #     pass
-
-    raise OSError
 
 
 def fixup(string):
@@ -245,11 +233,8 @@ def compile_args(args, script, style):
         return [script] + output
 
 
-def get_args(args):
+def get_args(settings, args):
     'Builds command line arguments.'
-
-    # load HtmlTidy settings
-    settings = sublime.load_settings('HtmlTidy.sublime-settings')
 
     # leave out default values
     for option in supported_options:
@@ -298,11 +283,8 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         print('HtmlTidy: invoked on file: %s' % (self.view.file_name()))
 
-        try:
-            script, arg_type = find_tidier()
-        except OSError:
-            print "HTMLTidy: Couldn't find Tidy or PHP. Stopping without Tidying anything."
-            return
+        # load HtmlTidy settings
+        settings = sublime.load_settings('HtmlTidy.sublime-settings')
 
         tab_size = int(self.view.settings().get('tab_size', 4))
         # print('HtmlTidy: tab_size: %s' % (tab_size))
@@ -310,8 +292,15 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         args = [('--tab-size', str(tab_size))]
 
         # Get arguments from config files.
-        # This extends the argument just given, so that a user-given value for tab_size takes precedence.
-        args = get_args(args)
+        # This extends the args just given, so that a user-given value for tab_size takes precedence.
+        args = get_args(settings, args)
+        prefer_tidy = settings.get('prefer_tidy', 'webservice')
+
+        try:
+            script, arg_type = find_tidier(prefer_tidy)
+        except OSError:
+            print "HTMLTidy: Couldn't find Tidy or PHP. Stopping without Tidying anything."
+            return
 
         allow_dupe_ids = self.view.settings().get('allow-duplicate-ids', False)
 
@@ -322,11 +311,14 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
 
         else:
             # If no selection, get the entire view.
+            deselect_flag = True
             self.view.sel().add(sublime.Region(0, self.view.size()))
 
         command = compile_args(args, script, style=arg_type)
+
         print 'HtmlTidy: ' + str(command)
         #print "HtmlTidy: Passing this script and arguments: " + script + " " + str(args)
+
         for sel in self.view.sel():
 
             tidied, err, retval = tidy_string(self.view.substr(sel), command)
@@ -344,6 +336,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 # write new content back to buffer
                 self.view.replace(edit, sel, fixup(tidied))
 
+                if deselect_flag:
+                    self.deselect()
+
                 if retval == 1:
                     print "HTMLTidy: Tidy had some warnings for you:\n" + err
 
@@ -355,3 +350,9 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
                 # Append the given command to the error message.
                 nv.insert(edit, 0, err + "\n" + str(command))
                 nv.set_name('HTMLTidy: Tidy errors')
+
+    def deselect(self):
+        """Remove selection and place pointer at top of document (adapted from https://gist.github.com/1608283)."""
+        top = self.view.sel()[0].a
+        self.view.sel().clear()
+        self.view.sel().add(sublime.Region(top, top))

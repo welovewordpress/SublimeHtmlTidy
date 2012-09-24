@@ -1,4 +1,7 @@
 {
+  // Select what version of tidy to prefer. Valid options: php, exe, webservice. 'exe' should only be used in windows
+  "prefer_tidy": "webservice",
+
   // This option specifies the right margin Tidy uses for line wrapping. 
   // Tidy tries to wrap lines so that they do not exceed this length. 
   // Set wrap to zero if you want to disable line wrapping.
