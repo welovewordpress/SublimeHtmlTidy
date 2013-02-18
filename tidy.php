@@ -121,7 +121,7 @@ if ( !version_compare( phpversion(), "5.2", ">=" ) ) {
     exit( 1 );
 }
 
-if ( ! class_exists('Tidyx') ) {
+if ( ! class_exists('Tidyx') && ! class_exists('Tidy') ) {
     fwrite( STDERR, "Error: tidy.php requires PHP 5.2 with libtidy support built in.\n" );
     exit( 1 );
 }
