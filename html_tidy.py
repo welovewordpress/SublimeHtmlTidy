@@ -302,7 +302,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
             print "HTMLTidy: Couldn't find Tidy or PHP. Stopping without Tidying anything."
             return
 
-        allow_dupe_ids = self.view.settings().get('allow-duplicate-ids', False)
+        allow_dupe_ids = settings.get('allow-duplicate-ids', False)
 
         # Get current selection(s).
         if not self.view.sel()[0].empty():
