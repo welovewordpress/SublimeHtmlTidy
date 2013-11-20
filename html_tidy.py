@@ -307,6 +307,7 @@ class HtmlTidyCommand(sublime_plugin.TextCommand):
         # Get current selection(s).
         if not self.view.sel()[0].empty():
             # If selection, then make sure not to add body tags and the like.
+            deselect_flag = False
             args += [('--show-body-only', '1')]
 
         else:
